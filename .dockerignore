@@ -1,0 +1,10 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+variable_results
+small_results
+results
+out
+*.log
