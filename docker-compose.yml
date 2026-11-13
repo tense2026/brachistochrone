@@ -1,0 +1,12 @@
+services:
+  study:
+    build: .
+    image: brachistochrone-study:latest
+    volumes:
+      - ./out:/app/out
+    # Default command re-runs the published 180-generation configuration.
+
+  tests:
+    build: .
+    image: brachistochrone-study:latest
+    command: ["-m", "unittest", "-v", "test_project", "test_magnus"]

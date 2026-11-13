@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run physics and regression tests
+        run: python -m unittest -v test_project test_magnus
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The image build runs the test suite as a RUN step, so this also
+      # verifies the container reproduces the study environment.
+      - name: Build image
+        run: docker build -t brachistochrone-study:ci .
+      - name: Smoke-run the study in the container
+        run: |
+          mkdir -p out
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/out:/app/out" \
+            brachistochrone-study:ci variable_study.py \
+            --episodes 5 --pop-size 6 --no-show --output-dir /app/out
+          test -f out/summary.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: study-smoke-output
+          path: out/
